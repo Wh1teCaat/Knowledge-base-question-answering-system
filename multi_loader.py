@@ -22,10 +22,10 @@ class MultiLoader(BaseLoader):
         """将 huggingface 缓存目录转换为 huggingface path"""
         return dirname.replace("___", "/").replace("---", "/")
 
-    def _is_huggingface_path(self, filename) -> bool:
+    def _is_huggingface_path(self, filename: str) -> bool:
         return "___" in filename or "---" in filename or "/" in filename
 
-    def _load_file(self, filename: str):
+    def _load_file(self, filename: str) -> list[Document]:
         """加载 huggingface 数据或本地文件"""
         # 加载 huggingface 数据
         if self._is_huggingface_path(filename):
