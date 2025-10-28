@@ -33,7 +33,7 @@ class MultiLoader(BaseLoader):
             try:
                 dataset = load_dataset(
                     filename,
-                    split="train",
+                    split="train[:10000]",
                     cache_dir="./data/huggingface",
                 )
             except Exception as e:
