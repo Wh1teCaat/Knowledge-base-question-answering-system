@@ -18,11 +18,13 @@ class MultiLoader(BaseLoader):
         super().__init__()
         self.path = path
 
-    def _convert_huggingface_path(self, dirname: str) -> str:
+    @staticmethod
+    def _convert_huggingface_path(dirname: str) -> str:
         """将 huggingface 缓存目录转换为 huggingface path"""
         return dirname.replace("___", "/").replace("---", "/")
 
-    def _is_huggingface_path(self, filename: str) -> bool:
+    @staticmethod
+    def _is_huggingface_path(filename: str) -> bool:
         return "___" in filename or "---" in filename or "/" in filename
 
     def _load_file(self, filename: str) -> list[Document]:
@@ -33,7 +35,7 @@ class MultiLoader(BaseLoader):
             try:
                 dataset = load_dataset(
                     filename,
-                    split="train[:10000]",
+                    split="train[:5000]",
                     cache_dir="./data/huggingface",
                 )
             except Exception as e:
@@ -54,13 +56,13 @@ class MultiLoader(BaseLoader):
         path = os.path.join(self.path, filename)
         ext = os.path.splitext(path)[1].lower()
         if ext == '.txt':
-            loader = TextLoader(path, encoding="utf-8")
+            sub_loader = TextLoader(path, encoding="utf-8")
         elif ext == '.pdf':
-            loader = PyPDFLoader(path)
+            sub_loader = PyPDFLoader(path)
         elif ext == '.csv':
-            loader = CSVLoader(path)
+            sub_loader = CSVLoader(path)
         elif ext == '.json':
-            loader = JSONLoader(
+            sub_loader = JSONLoader(
                 file_path=path,
                 jq_schema="""
                 .[] | {
@@ -77,13 +79,13 @@ class MultiLoader(BaseLoader):
                 content_key="content"
             )
         elif ext == '.html':
-            loader = UnstructuredHTMLLoader(path, mode="elements", strategy="fast")
+            sub_loader = UnstructuredHTMLLoader(path, mode="elements", strategy="fast")
         elif ext == '.md':
-            loader = UnstructuredMarkdownLoader(path, strategy="fast")
+            sub_loader = UnstructuredMarkdownLoader(path, strategy="fast")
         else:
             return [Document(page_content="", metadata={"source": path, "error": "unsupported file type"})]
         try:
-            return loader.load()
+            return sub_loader.load()
         except Exception as e:
             return [Document(page_content="", metadata={"source": path, "error": str(e)})]
 
@@ -102,3 +104,4 @@ class MultiLoader(BaseLoader):
             else:
                 docs.extend(self._load_file(item))
         return docs
+
