@@ -1,6 +1,6 @@
 import os
 from langchain_core.embeddings import Embeddings
-from langchain_ollama import OllamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 from functools import lru_cache
@@ -12,15 +12,14 @@ class CacheEmbedding(Embeddings):
     def __init__(
         self,
         cache_path="./cache/embeddings_cache.json",
-        batch_size=16,
-        thread_num=4,
+        batch_size=64,
     ):
         self.cache_path = cache_path
         self.batch_size = batch_size
-        self.thread_num = thread_num
-        self.embeddings = OllamaEmbeddings(
-            model=os.getenv("LOCAL_EMBEDDING"),
-            base_url=os.getenv("LOCAL_BASE_URL"),
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name=os.getenv("HF_MODEL_NAME"),
+            model_kwargs={"device": "cuda"},  # GPU 加速
+            encode_kwargs={"batch_size": self.batch_size, "normalize_embeddings": True}
         )
 
         os.makedirs(os.path.dirname(self.cache_path), exist_ok=True)
@@ -81,13 +80,20 @@ class CacheEmbedding(Embeddings):
             self._save_cache()
         return results
 
+    # def embed_documents(self, texts: list[str]) -> list[list[float]]:
+    #     """多线程并行批量嵌入"""
+    #     results = []
+    #     batches = [texts[idx:idx + self.batch_size] for idx in range(0, len(texts), self.batch_size)]
+    #     with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
+    #         # 列表元素是每个线程的控制句柄
+    #         futures = [executor.submit(self._embed_batch, batch) for batch in batches]
+    #         for future in as_completed(futures):  # 按完成顺序取结果
+    #             results.extend(future.result())
+    #     return results
+
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        """多线程并行批量嵌入"""
         results = []
-        batches = [texts[idx:idx + self.batch_size] for idx in range(0, len(texts), self.batch_size)]
-        with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
-            # 列表元素是每个线程的控制句柄
-            futures = [executor.submit(self._embed_batch, batch) for batch in batches]
-            for future in as_completed(futures):  # 按完成顺序取结果
-                results.extend(future.result())
+        batches = [texts[i:i + self.batch_size] for i in range(0, len(texts), self.batch_size)]
+        for batch in batches:
+            results.extend(self._embed_batch(batch))
         return results

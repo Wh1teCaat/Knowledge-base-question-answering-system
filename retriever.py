@@ -1,7 +1,9 @@
-from langchain_community.vectorstores import Chroma
+import os
 
+from langchain_community.vectorstores import Chroma
 from multiloader import MultiLoader
 from hybridtextsplitter import HybridTextSplitter
+from cachembedding import CacheEmbedding
 
 
 class RAG:
@@ -12,9 +14,11 @@ class RAG:
     def build_vector_db(self):
         loader = MultiLoader(self.data_path)
         docs = loader.load()
+        print("文件加载完成")
 
         splitter = HybridTextSplitter()
         docs = splitter.split(docs)
+        print("文档切分完成")
 
         embedding_model = splitter.embedding_model
         db = Chroma.from_documents(
@@ -22,14 +26,17 @@ class RAG:
             embedding=embedding_model,
             persist_directory=self.db_path
         )
-        db.persist()
         return db
 
     def get_retriever(self):
-        try:
-            db = Chroma(persist_directory=self.db_path)
-        except Exception as e:
-            print(e)
+        if not os.path.exists(self.db_path) or not os.listdir(self.db_path):
+            print("⚠️ 未检测到持久化文件，正在重新构建数据库...")
             db = self.build_vector_db()
+        else:
+            print("✅ 加载已有数据库...")
+            db = Chroma(
+                persist_directory=self.db_path,
+                embedding_function=CacheEmbedding()
+            )
         retriever = db.as_retriever()
         return retriever

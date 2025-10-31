@@ -68,14 +68,14 @@ class HybridTextSplitter:
         results = self.lens_splitter.split_documents(results)
         print(f"  → 长度控制后: {len(results)} 段")
 
-        if self.enable_filter:
-            print("Step 3️⃣ 冗余过滤 (EmbeddingsRedundantFilter) ...")
-            results = self.filter.transform_documents(results)
-            print(f"  → 去重后: {len(results)} 段")
-
-        print("Step 4️⃣ 语义切分 (SemanticChunker) ...")
-        results = self.semantic_splitter.split_documents(results)
-        print(f"  → 语义切分结果: {len(results)} 段")
+        # if self.enable_filter:
+        #     print("Step 3️⃣ 冗余过滤 (EmbeddingsRedundantFilter) ...")
+        #     results = self.filter.transform_documents(results)
+        #     print(f"  → 去重后: {len(results)} 段")
+        #
+        # print("Step 4️⃣ 语义切分 (SemanticChunker) ...")
+        # results = self.semantic_splitter.split_documents(results)
+        # print(f"  → 语义切分结果: {len(results)} 段")
 
         print("✅ 切分完成")
         return results
