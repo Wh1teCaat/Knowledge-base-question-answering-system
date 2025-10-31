@@ -208,3 +208,5 @@ __marimo__/
 
 .idea/
 data/huggingface/
+cache/
+chroma_db/
