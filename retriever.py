@@ -7,16 +7,17 @@ from cachembedding import CacheEmbedding
 
 
 class RAG:
-    def __init__(self, data_path, db_path):
+    def __init__(self, data_path, db_path, cache_path):
         self.data_path = data_path
         self.db_path = db_path
+        self.cache_path = cache_path
 
     def build_vector_db(self):
         loader = MultiLoader(self.data_path)
         docs = loader.load()
         print("文件加载完成")
 
-        splitter = HybridTextSplitter()
+        splitter = HybridTextSplitter(self.cache_path)
         docs = splitter.split(docs)
         print("文档切分完成")
 
@@ -37,7 +38,7 @@ class RAG:
             print("✅ 加载已有数据库...")
             db = Chroma(
                 persist_directory=self.db_path,
-                embedding_function=CacheEmbedding()
+                embedding_function=CacheEmbedding(self.cache_path)
             )
         retriever = db.as_retriever()
         return retriever

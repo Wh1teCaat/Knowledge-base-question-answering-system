@@ -13,18 +13,18 @@ dotenv.load_dotenv()
 class HybridTextSplitter:
     def __init__(
         self,
+        cache_path,
         chunk_size=500,
         chunk_overlap=50,
-        embedding_model=CacheEmbedding(),
         buffer_size=4,
         threshold_type: Literal["percentile", "standard_deviation", "interquartile", "gradient"] = "percentile",
         threshold_amount=95.0,
         similarity_threshold=0.97,
         enable_filter=True,
     ):
+        self.embedding_model = CacheEmbedding(cache_path)
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        self.embedding_model = embedding_model
         self.buffer_size = buffer_size
         self.threshold_type = threshold_type
         self.threshold_amount = threshold_amount

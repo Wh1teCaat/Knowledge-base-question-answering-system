@@ -15,7 +15,7 @@ class CacheEmbedding(Embeddings):
     """包装原始 embedding 模型，实现缓存 + 并行逻辑"""
     def __init__(
         self,
-        cache_path="./cache/embeddings_cache.json",
+        cache_path,
         batch_size=128,
     ):
         self.cache_path = cache_path
