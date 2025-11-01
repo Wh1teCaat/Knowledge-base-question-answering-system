@@ -1,10 +1,14 @@
 import os
+import torch
 from langchain_core.embeddings import Embeddings
 from langchain_huggingface import HuggingFaceEmbeddings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 from functools import lru_cache
 import json
+import dotenv
+
+dotenv.load_dotenv()
 
 
 class CacheEmbedding(Embeddings):
@@ -12,7 +16,7 @@ class CacheEmbedding(Embeddings):
     def __init__(
         self,
         cache_path="./cache/embeddings_cache.json",
-        batch_size=64,
+        batch_size=128,
     ):
         self.cache_path = cache_path
         self.batch_size = batch_size
@@ -97,3 +101,11 @@ class CacheEmbedding(Embeddings):
         for batch in batches:
             results.extend(self._embed_batch(batch))
         return results
+
+
+print(os.getenv("HF_MODEL_NAME"))
+print("==== PyTorch 检测 ====")
+print("CUDA 可用:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("GPU 名称:", torch.cuda.get_device_name(0))
+print("PyTorch 版本:", torch.__version__, "CUDA:", torch.version.cuda)

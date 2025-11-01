@@ -26,6 +26,7 @@ class RAG:
             embedding=embedding_model,
             persist_directory=self.db_path
         )
+        print("✅ 向量数据库构建完成")
         return db
 
     def get_retriever(self):
