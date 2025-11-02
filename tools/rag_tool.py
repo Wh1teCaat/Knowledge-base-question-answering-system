@@ -1,22 +1,21 @@
 from langchain_core.tools import StructuredTool
-
-from base_tool import BaseToolWrapper
-from langchain.tools import tool
+from tools.base_tool import BaseToolWrapper
 from pydantic import BaseModel, Field
 
 
 class RagTool(BaseToolWrapper):
     DEFAULT_NAME = "RagTool"
-    DEFAULT_DESC = "从本地向量数据库中检索数据"
+    DEFAULT_DESC = "可以根据用户提问从本地向量数据库中检索数据"
 
-    def __init__(self, data_path, db_path):
+    def __init__(self, data_path, db_path, cache_path):
         super().__init__()
         self.data_path = data_path
         self.db_path = db_path
+        self.cache_path = cache_path
 
     def build(self):
         from retriever import RAG
-        rag = RAG(self.data_path, self.db_path)
+        rag = RAG(self.data_path, self.db_path, self.cache_path)
         retriever = rag.get_retriever()
 
         class ArgSchema(BaseModel):

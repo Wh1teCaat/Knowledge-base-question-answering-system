@@ -1,5 +1,5 @@
 from langchain_community.tools import TavilySearchResults
-from base_tool import BaseToolWrapper
+from tools.base_tool import BaseToolWrapper
 import dotenv, os
 
 dotenv.load_dotenv()

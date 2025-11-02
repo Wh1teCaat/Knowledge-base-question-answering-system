@@ -1,4 +1,6 @@
-from retriever import RAG
+from agent import RAGAgent
 
-rag = RAG("./data", "./chroma_db")
-retriever = rag.get_retriever()
+executor = RAGAgent().get_executor()
+executor.invoke({"input": "什么是现实增强技术"})
+executor.invoke({"input": "2025.11.2武汉天气"})
+executor.invoke({"input": "刚刚都问了什么"})
