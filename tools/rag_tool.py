@@ -22,6 +22,15 @@ class RagTool(BaseToolWrapper):
             query: str = Field(description="用户输入内容")
 
         def _rag_func(query: str):
+            if isinstance(query, bytes):
+                query = query.decode('utf-8', errors='ignore')
+            else:
+                try:
+                    # 部分版本LangChain会把中文经过ISO-8859-1再转utf8
+                    query = query.encode('latin1').decode('utf-8')
+                except:
+                    pass
+            print(f"🧩 [RagTool] 实际接收到的 query: {repr(query)}")
             response = retriever.invoke(query)
             return "\n".join([doc.page_content for doc in response])
 
