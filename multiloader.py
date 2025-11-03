@@ -27,7 +27,7 @@ class MultiLoader(BaseLoader):
     def _is_huggingface_path(filename: str) -> bool:
         return "___" in filename or "---" in filename or "/" in filename
 
-    def _load_file(self, filename: str) -> list[Document]:
+    def _load_file(self, filename: str, sample_num=100) -> list[Document]:
         """加载 huggingface 数据或本地文件"""
         # 加载 huggingface 数据
         if self._is_huggingface_path(filename):
@@ -35,9 +35,10 @@ class MultiLoader(BaseLoader):
             try:
                 dataset = load_dataset(
                     filename,
-                    split="train[:500]",
+                    split="train",
                     cache_dir="./data/huggingface",
                 )
+                sample = dataset.shuffle().select(range(min(sample_num, len(dataset))))
             except Exception as e:
                 raise RuntimeError(f"❌ 加载数据集失败: {e}")
             # 加载成 document
@@ -48,7 +49,7 @@ class MultiLoader(BaseLoader):
                               "answer": record.get("answer"),
                               "datatype": record.get("positive_doc")[0].get("datatype"),
                               "title": record.get("positive_doc")[0].get("title")}
-                ) for record in dataset
+                ) for record in sample
             ]
             return docs
 

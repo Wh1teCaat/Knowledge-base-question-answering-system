@@ -5,7 +5,11 @@ from pydantic import BaseModel, Field
 
 class RagTool(BaseToolWrapper):
     DEFAULT_NAME = "RagTool"
-    DEFAULT_DESC = "可以根据用户提问从本地向量数据库中检索数据"
+    DEFAULT_DESC = """
+    当用户的问题需要查找知识库中具体信息（例如论文、技术内容、事实说明等）时使用此工具。
+    仅当问题属于“知识问答、专业内容、事实查询”时调用；
+    对于闲聊、反问、总结、情绪、历史对话类问题，请直接回答，不要调用本工具。
+    """
 
     def __init__(self, data_path, db_path, cache_path):
         super().__init__()

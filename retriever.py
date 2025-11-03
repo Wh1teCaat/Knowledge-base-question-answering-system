@@ -11,34 +11,43 @@ class RAG:
         self.data_path = data_path
         self.db_path = db_path
         self.cache_path = cache_path
+        self.loader = MultiLoader(self.data_path)
+        self.splitter = HybridTextSplitter(self.cache_path)
+        self.embedding = self.splitter.embedding_model
 
-    def build_vector_db(self):
-        loader = MultiLoader(self.data_path)
-        docs = loader.load()
+    def _process_documents(self):
+        docs = self.loader.load()
         print("文件加载完成")
 
-        splitter = HybridTextSplitter(self.cache_path)
-        docs = splitter.split(docs)
+        docs = self.splitter.split(docs)
         print("文档切分完成")
+        return docs
 
-        embedding_model = splitter.embedding_model
+    def _build_db(self):
+        docs = self._process_documents()
         db = Chroma.from_documents(
             documents=docs,
-            embedding=embedding_model,
+            embedding=self.embedding,
             persist_directory=self.db_path
         )
         print("✅ 向量数据库构建完成")
         return db
 
+    def _append_db(self):
+        docs = self._process_documents()
+        db = Chroma(
+            persist_directory=self.db_path,
+            embedding_function=CacheEmbedding(self.cache_path)
+        )
+        db.add_documents(documents=docs)
+        return db
+
     def get_retriever(self):
         if not os.path.exists(self.db_path) or not os.listdir(self.db_path):
             print("⚠️ 未检测到持久化文件，正在重新构建数据库...")
-            db = self.build_vector_db()
+            db = self._build_db()
         else:
             print("✅ 加载已有数据库...")
-            db = Chroma(
-                persist_directory=self.db_path,
-                embedding_function=CacheEmbedding(self.cache_path)
-            )
+            db = self._append_db()
         retriever = db.as_retriever()
         return retriever
