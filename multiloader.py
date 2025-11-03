@@ -9,6 +9,7 @@ from langchain_community.document_loaders import (
 )
 from langchain_core.documents import Document
 from datasets import load_dataset
+import hashlib
 import os
 
 
@@ -26,6 +27,12 @@ class MultiLoader(BaseLoader):
     @staticmethod
     def _is_huggingface_path(filename: str) -> bool:
         return "___" in filename or "---" in filename or "/" in filename
+
+    @staticmethod
+    def make_md5(text: str):
+        if not text:
+            return ""
+        return hashlib.md5(text.encode("utf-8")).hexdigest()
 
     def _load_file(self, filename: str, sample_num=100) -> list[Document]:
         """加载 huggingface 数据或本地文件"""
@@ -48,7 +55,8 @@ class MultiLoader(BaseLoader):
                     metadata={"question": record.get("question"),
                               "answer": record.get("answer"),
                               "datatype": record.get("positive_doc")[0].get("datatype"),
-                              "title": record.get("positive_doc")[0].get("title")}
+                              "title": record.get("positive_doc")[0].get("title"),
+                              "hash": self.make_md5(record.get("positive_doc")[0].get("content"))}
                 ) for record in sample
             ]
             return docs

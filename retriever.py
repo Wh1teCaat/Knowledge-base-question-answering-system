@@ -1,5 +1,5 @@
 import os
-
+import hashlib
 from langchain_community.vectorstores import Chroma
 from multiloader import MultiLoader
 from hybridtextsplitter import HybridTextSplitter
@@ -33,12 +33,24 @@ class RAG:
         print("✅ 向量数据库构建完成")
         return db
 
+    @staticmethod
+    def make_md5(text: str):
+        if not text:
+            return ""
+        return hashlib.md5(text.encode("utf-8")).hexdigest()
+
     def _append_db(self):
         docs = self._process_documents()
         db = Chroma(
             persist_directory=self.db_path,
             embedding_function=CacheEmbedding(self.cache_path)
         )
+        exist_docs = set(
+            m.get("hash")
+            for m in db.get(include=["metadatas"])["metadatas"]
+            if m.get("hash")    # 不存在返回 None
+        )
+        docs = [d for d in docs if self.make_md5(d.page_content) not in exist_docs]
         db.add_documents(documents=docs)
         return db
 
