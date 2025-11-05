@@ -103,7 +103,6 @@ class CacheEmbedding(Embeddings):
         return results
 
 
-print(os.getenv("HF_MODEL_NAME"))
 print("==== PyTorch 检测 ====")
 print("CUDA 可用:", torch.cuda.is_available())
 if torch.cuda.is_available():

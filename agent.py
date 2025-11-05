@@ -1,4 +1,4 @@
-from langchain.memory import ConversationSummaryBufferMemory
+from multiusermemory import SummaryInjectMemory
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate
@@ -62,14 +62,14 @@ class RAGAgent:
         )
         self.runnable = RunnableWithMessageHistory(
             runnable=self.executor,
-            get_session_history=self.get_session_history,
+            get_session_history=self.get_or_create_memory,
             input_messages_key="input",
             history_messages_key="chat_history",
         )
 
     def get_or_create_memory(self, session_id: str):
         if session_id not in self.store:
-            self.store[session_id] = ConversationSummaryBufferMemory(
+            self.store[session_id] = SummaryInjectMemory(
                 llm=self.llm,
                 max_token_limit=500,
                 memory_key="chat_history",
@@ -77,26 +77,23 @@ class RAGAgent:
             )
         return self.store[session_id]
 
-    def get_session_history(self, session_id: str) -> BaseChatMessageHistory:
-        return self.get_or_create_memory(session_id).chat_memory
-
-    class _MemoryExecutor:
-        def __init__(self, parent):
-            self.parent = parent
-            self.runnable = parent.runnable
-
-        def invoke(self, inputs, config):
-            session_id = config.get("configurable").get("session_id")
-            if not session_id:
-                raise ValueError("请在 config.configurable.session_id 中提供会话ID")
-
-            result = self.runnable.invoke(inputs, config=config)
-            memory = self.parent.get_or_create_memory(session_id)
-            memory.save_context(
-                inputs={"human": inputs.get("input")},
-                outputs={"ai": result.get("output")}
-            )
-            return result
+    # class _MemoryExecutor:
+    #     def __init__(self, parent):
+    #         self.parent = parent
+    #         self.runnable = parent.runnable
+    #
+    #     def invoke(self, inputs, config):
+    #         session_id = config.get("configurable").get("session_id")
+    #         if not session_id:
+    #             raise ValueError("请在 config.configurable.session_id 中提供会话ID")
+    #
+    #         result = self.runnable.invoke(inputs, config=config)
+    #         memory = self.parent.get_or_create_memory(session_id)
+    #         memory.save_context(
+    #             inputs={"human": inputs.get("input")},
+    #             outputs={"ai": result.get("output")}
+    #         )
+    #         return result
 
     def get_memory_runnable(self):
-        return self._MemoryExecutor(self)
+        return self.runnable
