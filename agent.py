@@ -62,12 +62,12 @@ class RAGAgent:
         )
         self.runnable = RunnableWithMessageHistory(
             runnable=self.executor,
-            get_session_history=self._get_session_history,
+            get_session_history=self.get_session_history,
             input_messages_key="input",
             history_messages_key="chat_history",
         )
 
-    def _get_or_create_memory(self, session_id: str):
+    def get_or_create_memory(self, session_id: str):
         if session_id not in self.store:
             self.store[session_id] = ConversationSummaryBufferMemory(
                 llm=self.llm,
@@ -77,8 +77,8 @@ class RAGAgent:
             )
         return self.store[session_id]
 
-    def _get_session_history(self, session_id: str) -> BaseChatMessageHistory:
-        return self._get_or_create_memory(session_id).chat_memory
+    def get_session_history(self, session_id: str) -> BaseChatMessageHistory:
+        return self.get_or_create_memory(session_id).chat_memory
 
     class _MemoryExecutor:
         def __init__(self, parent):
@@ -91,7 +91,7 @@ class RAGAgent:
                 raise ValueError("请在 config.configurable.session_id 中提供会话ID")
 
             result = self.runnable.invoke(inputs, config=config)
-            memory = self.parent._get_or_create_memory(session_id)
+            memory = self.parent.get_or_create_memory(session_id)
             memory.save_context(
                 inputs={"human": inputs.get("input")},
                 outputs={"ai": result.get("output")}
