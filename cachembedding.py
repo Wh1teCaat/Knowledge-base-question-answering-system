@@ -1,7 +1,7 @@
 import os
 import torch
 from langchain_core.embeddings import Embeddings
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 from functools import lru_cache
