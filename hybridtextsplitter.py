@@ -1,5 +1,4 @@
 from langchain_community.document_transformers import EmbeddingsRedundantFilter
-from langchain_experimental.text_splitter import SemanticChunker
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from typing import Literal
@@ -44,13 +43,13 @@ class HybridTextSplitter:
             chunk_overlap=self.chunk_overlap,
             separators=["\n\n", "\n", "。", "！", "？", "，"],
         )
-        # 按语义切
-        self.semantic_splitter = SemanticChunker(
-            embeddings=self.embedding_model,
-            buffer_size=self.buffer_size,
-            breakpoint_threshold_type=self.threshold_type,
-            breakpoint_threshold_amount=self.threshold_amount,
-        )
+        # # 按语义切
+        # self.semantic_splitter = SemanticChunker(
+        #     embeddings=self.embedding_model,
+        #     buffer_size=self.buffer_size,
+        #     breakpoint_threshold_type=self.threshold_type,
+        #     breakpoint_threshold_amount=self.threshold_amount,
+        # )
         # 冗余过滤
         if self.enable_filter:
             self.filter = EmbeddingsRedundantFilter(
@@ -73,9 +72,9 @@ class HybridTextSplitter:
             results = self.filter.transform_documents(results)
             print(f"  → 去重后: {len(results)} 段")
 
-        print("Step 4️⃣ 语义切分 (SemanticChunker) ...")
-        results = self.semantic_splitter.split_documents(results)
-        print(f"  → 语义切分结果: {len(results)} 段")
+        # print("Step 4️⃣ 语义切分 (SemanticChunker) ...")
+        # results = self.semantic_splitter.split_documents(results)
+        # print(f"  → 语义切分结果: {len(results)} 段")
 
         print("✅ 切分完成")
         return results

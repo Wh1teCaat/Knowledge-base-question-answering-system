@@ -1,7 +1,7 @@
 import os
-import torch
+# import torch
 from langchain_core.embeddings import Embeddings
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 from functools import lru_cache
@@ -22,7 +22,7 @@ class CacheEmbedding(Embeddings):
         self.batch_size = batch_size
         self.embeddings = HuggingFaceEmbeddings(
             model_name=os.getenv("HF_MODEL_NAME"),
-            model_kwargs={"device": "cuda"},  # GPU 加速
+            model_kwargs={"device": "cpu"},  # GPU 加速
             encode_kwargs={"batch_size": self.batch_size, "normalize_embeddings": True}
         )
 
@@ -103,8 +103,8 @@ class CacheEmbedding(Embeddings):
         return results
 
 
-print("==== PyTorch 检测 ====")
-print("CUDA 可用:", torch.cuda.is_available())
-if torch.cuda.is_available():
-    print("GPU 名称:", torch.cuda.get_device_name(0))
-print("PyTorch 版本:", torch.__version__, "CUDA:", torch.version.cuda)
+# print("==== PyTorch 检测 ====")
+# print("CUDA 可用:", torch.cuda.is_available())
+# if torch.cuda.is_available():
+#     print("GPU 名称:", torch.cuda.get_device_name(0))
+# print("PyTorch 版本:", torch.__version__, "CUDA:", torch.version.cuda)

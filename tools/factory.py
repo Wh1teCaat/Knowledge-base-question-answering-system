@@ -1,7 +1,7 @@
 
 from tools.tavily_tool import TavilyTool
 from tools.rag_tool import RagTool
-from tools.cal_tool import CalculatorTool
+# from migration.tools.cal_tool import CalculatorTool
 from pathlib import Path
 import yaml
 
@@ -16,7 +16,7 @@ class ToolFactory:
         """
         self.enable_tavily = kwargs.get("enable_tavily", True)
         self.enable_rag = kwargs.get("enable_rag", True)
-        self.enable_calculator = kwargs.get("enable_calculator", True)
+        # self.enable_calculator = kwargs.get("enable_calculator", True)
 
     @staticmethod
     def _load_config():
@@ -37,6 +37,11 @@ class ToolFactory:
             db_path = config["retriever"]["db_path"]
             cache_path = config["embedding"]["cache_path"]
             tools.append(RagTool(data_path, db_path, cache_path).build())
-        if self.enable_calculator:
-            tools.append(CalculatorTool().build())
+        # if self.enable_calculator:
+        #     tools.append(CalculatorTool().build())
         return tools
+
+
+current_path = Path(__file__).resolve()
+print(Path(__file__).resolve())
+print(current_path.parent.parent)

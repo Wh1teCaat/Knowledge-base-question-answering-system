@@ -1,8 +1,7 @@
 import os
 import hashlib
 from enum import Enum
-
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from multiloader import MultiLoader
 from hybridtextsplitter import HybridTextSplitter
 from cachembedding import CacheEmbedding

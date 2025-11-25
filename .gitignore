@@ -210,3 +210,4 @@ __marimo__/
 data/huggingface/
 cache/
 chroma_db/
+agent_db.sqlite
