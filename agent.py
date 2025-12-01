@@ -1,15 +1,18 @@
-from langgraph.graph import StateGraph
-from tools.factory import ToolFactory
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import BaseMessage, HumanMessage, RemoveMessage, SystemMessage, ToolMessage, AIMessage
-from typing import TypedDict, Annotated, Optional
-from langgraph.graph.message import add_messages
-from langgraph.checkpoint.sqlite import SqliteSaver
-from pydantic import BaseModel, Field
-import sqlite3
-import tiktoken
-import dotenv
 import os
+import sqlite3
+from typing import TypedDict, Annotated, Optional
+
+import dotenv
+import tiktoken
+from langchain_core.messages import BaseMessage, HumanMessage, RemoveMessage, SystemMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.graph import StateGraph
+from langgraph.graph.message import add_messages
+from pydantic import BaseModel, Field
+
+from RAGAgent import call_rag_expert
+from SearchAgent import call_search_expert
 
 dotenv.load_dotenv()
 
@@ -18,7 +21,7 @@ class RAGAgent:
     def __init__(self, max_tokens=5000):
         class Receipt(BaseModel):
             """结构化输出"""
-            reasoning: Optional[str] = Field(
+            reason: Optional[str] = Field(
                 default=None,
                 description="""
                 仅在需要思考时，填写此字段；
@@ -27,7 +30,7 @@ class RAGAgent:
                 """
             )
             answer: str = Field(description="模型最终得到的答案，回答简洁、针对用户问题。")
-            sources: list[str] = Field(description="回答中引用的具体文档名称或页码列表。如果没用到文档，请留空。")
+            source: list[str] = Field(description="回答中引用的具体文档名称或页码列表。如果没用到文档，请留空。")
 
         class AgentState(TypedDict):
             messages: Annotated[list[BaseMessage], add_messages]
@@ -35,7 +38,7 @@ class RAGAgent:
             structured_answer: Optional[Receipt]
 
         self._max_tokens = max_tokens
-        self._tools = ToolFactory().get_tools()
+        self._tools = [call_rag_expert, call_search_expert]
         self._tools_by_name = {tool.name: tool for tool in self._tools}
         self._llm = ChatOpenAI(model=os.getenv("MODEL_NAME"))
         self._llm_with_tools = self._llm.bind_tools(self._tools)

@@ -1,6 +1,23 @@
+import os
+import sys
+
+import yaml
 from langchain_core.tools import StructuredTool
-from tools.base_tool import BaseToolWrapper
 from pydantic import BaseModel, Field
+
+from tools.base_tool import BaseToolWrapper
+
+current_script_path = os.path.abspath(__file__)
+project_root = os.path.dirname(os.path.dirname(current_script_path))
+os.chdir(project_root)
+sys.path.append(project_root)
+
+config_path = project_root/ "config.yaml"
+with open(config_path, "r", encoding="utf-8") as f:
+    config = yaml.safe_load(f)
+data_path = config["loader"]["data_path"]
+cache_path = config["embedding"]["cache_path"]
+db_path = config["retriever"]["db_path"]
 
 
 class RagTool(BaseToolWrapper):
@@ -26,17 +43,8 @@ class RagTool(BaseToolWrapper):
             query: str = Field(description="用户输入内容")
 
         def _rag_func(query: str):
-            if isinstance(query, bytes):
-                query = query.decode('utf-8', errors='ignore')
-            else:
-                try:
-                    # 部分版本LangChain会把中文经过ISO-8859-1再转utf8
-                    query = query.encode('latin1').decode('utf-8')
-                except:
-                    pass
-            print(f"🧩 [RagTool] 实际接收到的 query: {repr(query)}")
             response = retriever.invoke(query)
-            return "\n".join([doc.page_content for doc in response])
+            return response
 
         return StructuredTool.from_function(
             func=_rag_func,
@@ -45,3 +53,6 @@ class RagTool(BaseToolWrapper):
             arg_schema=ArgSchema,
             return_direct=False
         )
+
+
+rag_retriever = RagTool(data_path, db_path, cache_path).build()

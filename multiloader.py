@@ -1,4 +1,7 @@
-from langchain_core.document_loaders.base import BaseLoader
+import hashlib
+import os
+
+from datasets import load_dataset
 from langchain_community.document_loaders import (
     TextLoader,
     PyPDFLoader,
@@ -7,10 +10,8 @@ from langchain_community.document_loaders import (
     UnstructuredHTMLLoader,
     UnstructuredMarkdownLoader,
 )
+from langchain_core.document_loaders.base import BaseLoader
 from langchain_core.documents import Document
-from datasets import load_dataset
-import hashlib
-import os
 
 
 class MultiLoader(BaseLoader):

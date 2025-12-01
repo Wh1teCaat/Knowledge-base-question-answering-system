@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from langchain_core.tools import BaseTool
 from typing import Optional
+
+from langchain_core.tools import BaseTool
 
 
 class BaseToolWrapper(ABC):
