@@ -1,5 +1,5 @@
-import os
 import sys
+from pathlib import Path
 
 import yaml
 from langchain_core.tools import StructuredTool
@@ -7,17 +7,17 @@ from pydantic import BaseModel, Field
 
 from tools.base_tool import BaseToolWrapper
 
-current_script_path = os.path.abspath(__file__)
-project_root = os.path.dirname(os.path.dirname(current_script_path))
-os.chdir(project_root)
-sys.path.append(project_root)
+current_script_path = Path(__file__).resolve()
+project_root = current_script_path.parent.parent
+sys.path.append(str(project_root))
 
-config_path = project_root/ "config.yaml"
+config_path = project_root / 'config.yaml'
 with open(config_path, "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
-data_path = config["loader"]["data_path"]
-cache_path = config["embedding"]["cache_path"]
-db_path = config["retriever"]["db_path"]
+
+data_path = project_root / config["loader"]["data_path"]
+cache_path = project_root / config["embedding"]["cache_path"]
+db_path = project_root / config["retriever"]["db_path"]
 
 
 class RagTool(BaseToolWrapper):

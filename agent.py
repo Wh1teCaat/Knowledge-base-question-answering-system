@@ -5,7 +5,7 @@ from typing import TypedDict, Annotated, Optional
 import dotenv
 import tiktoken
 from langchain_core.messages import BaseMessage, HumanMessage, RemoveMessage, SystemMessage, ToolMessage
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
@@ -17,19 +17,28 @@ from SearchAgent import call_search_expert
 dotenv.load_dotenv()
 
 
-class RAGAgent:
+class Agent:
     def __init__(self, max_tokens=5000):
         class Receipt(BaseModel):
             """结构化输出"""
-            reason: Optional[str] = Field(
+            reason: str = Field(
                 default=None,
                 description="""
-                仅在需要思考时，填写此字段；
-                先分析用户的意图和检索到的文档内容，解释你为什么会得出后续的结论；
-                如果问题非常简单（如问候、闲聊）或无需查阅文档，请忽略此字段（设为 None）。
+                【思维链分析】
+                1. 用户最新一句话的意图是什么？（是延续上文，还是开启新任务？）
+                2. 如果需要回忆，请提取历史消息中的关键信息。
+                3. 解释为什么选择调用（或不调用）某个工具。
                 """
             )
-            answer: str = Field(description="模型最终得到的答案，回答简洁、针对用户问题。")
+            answer: str = Field(
+                description="""
+                针对用户问题的最终回答内容。
+                【重要警告】：
+                - 如果用户要求写作文、写代码、写长文，此字段**必须包含完整的生成内容（全文）**。
+                - **严禁**只输出一句“已生成作文”或“见下文”之类的摘要。
+                - 必须是用户想看的那个结果本身。
+                """
+            )
             source: list[str] = Field(description="回答中引用的具体文档名称或页码列表。如果没用到文档，请留空。")
 
         class AgentState(TypedDict):
@@ -40,7 +49,7 @@ class RAGAgent:
         self._max_tokens = max_tokens
         self._tools = [call_rag_expert, call_search_expert]
         self._tools_by_name = {tool.name: tool for tool in self._tools}
-        self._llm = ChatOpenAI(model=os.getenv("MODEL_NAME"))
+        self._llm = ChatGoogleGenerativeAI(model=os.getenv("GEMINI_MODEL"))
         self._llm_with_tools = self._llm.bind_tools(self._tools)
         self._llm_structured = self._llm.with_structured_output(Receipt)
 
@@ -110,9 +119,44 @@ class RAGAgent:
             messages = state["messages"]
             summary = state.get("summary", "")
 
+            system_prompt = """你是一个高智能对话系统的**任务调度与决策中枢 (Central Orchestrator)**。
+
+            【角色定位】
+            你拥有多种专业工具的调用权限。你的核心职责不是机械地回复，而是作为**大脑**，分析用户意图，精准调度工具或调取记忆来解决问题。
+
+            【核心原则：最新指令优先 (Priority on Latest Instruction)】
+            在多轮对话中，用户意图经常会发生漂移（Intent Drift）。你必须严格遵守以下规则：
+            1. **锚定当下**：无论之前的对话上下文多么长（如长篇写作、代码生成），你必须**优先响应用户最新发送的一条指令**。
+            2. **打破惯性 (Break Context Inertia)**：
+               - 严禁被上文的格式带偏。如果上文是写作文，而用户最新问“几点了”，立即切换回简短回答模式，**绝对不要**再写一篇作文。
+               - 严禁在用户询问“回顾历史”时生成新内容。
+
+            【决策逻辑与资源调度】
+            请根据用户最新指令的性质，选择唯一的处理路径：
+            - **路径 A：需要外部能力**（如事实查询、计算、实时信息）
+              ➜ 必须调用对应的 **Tools**，严禁凭空猜测。
+            - **路径 B：需要回顾历史**（如“我刚才说什么了”、“总结上文”）
+              ➜ 调取 **对话历史 (Messages)** 或 **摘要 (Summary)** 进行事实复述。
+            - **路径 C：纯逻辑/闲聊**（如打招呼、通用问答）
+              ➜ 直接利用自身能力简练回复。
+
+            【思维链 (Reasoning) 协议】
+            在输出最终结果前，必须在 `reason` 字段中执行隐式推理：
+            1. **意图判别**：用户的最新意图属于上述哪种路径（A/B/C）？
+            2. **上下文清洗**：确认是否需要忽略上文的干扰信息（如长文本）？
+            3. **工具决策**：如果需要调用工具，理由是什么？
+            
+            【输出规范】
+            1. **完整性原则**：如果用户要求生成长文本（作文、报告、代码），你必须在 structured_answer.answer 字段中输出**完整的 800 字内容**，绝对不要只输出“我写好了一篇作文”这样的描述。
+            2. **严禁偷懒**：不要因为是 JSON 格式就省略内容。
+
+            请保持客观、冷静、服务型的对话风格。"""
+            system_msg = [SystemMessage(content=system_prompt)]
+
             if summary:
-                system_msg = SystemMessage(content=f"之前的对话摘要：{summary}")
-                messages = [system_msg] + messages
+                system_msg.append(SystemMessage(content=f"之前的对话摘要：{summary}"))
+
+            messages = system_msg + messages
 
             result = self._llm_with_tools.invoke(messages)
             return {"messages": [result]}
