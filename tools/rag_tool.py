@@ -42,12 +42,15 @@ class RagTool(BaseToolWrapper):
         class ArgSchema(BaseModel):
             query: str = Field(description="用户输入内容")
 
-        def _rag_func(query: str):
-            response = retriever.invoke(query)
-            return response
+        async def _rag_func_async(query: str):
+            return await retriever.ainvoke(query)
+
+        def _rag_func_sync(query: str):
+            return retriever.invoke(query)
 
         return StructuredTool.from_function(
-            func=_rag_func,
+            func=_rag_func_sync,        # 同步接口
+            coroutine=_rag_func_async,  # 异步接口
             name=self.name,
             description=self.description,
             arg_schema=ArgSchema,

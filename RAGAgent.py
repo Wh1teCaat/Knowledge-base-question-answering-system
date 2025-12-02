@@ -1,3 +1,4 @@
+import asyncio
 import os
 import uuid
 from typing import TypedDict, List, Annotated, Literal, Optional
@@ -21,9 +22,9 @@ class RAGState(TypedDict):
     grade: Optional[str]      # "yes" or "no"
 
 
-def retrieve(state: RAGState):
+async def retrieve(state: RAGState):
     question = state['question']
-    docs = rag_retriever.invoke(question)
+    docs = await rag_retriever.ainvoke(question)
     return {"documents": docs}
 
 
@@ -31,8 +32,9 @@ class Grade(BaseModel):
     grade: Literal["yes", "no"] = Field(description="只回答 'yes' or 'no'")
 
 llm = ChatOpenAI(model=os.getenv("MODEL_NAME"))
+structured_llm = llm.with_structured_output(Grade)
 
-def grade_documents(state: RAGState):
+async def grade_documents(state: RAGState):
     question = state['question']
     documents = state['documents']
     template = PromptTemplate.from_template("""
@@ -41,13 +43,15 @@ def grade_documents(state: RAGState):
     这是检索的文档：{document}
     请判断这个文档真回答了问题吗？
     """)
-
-    structured_llm = llm.with_structured_output(Grade)
-    grades = []
+    tasks = []
     for document in documents:
         prompt = template.format(question=question, document=document.page_content)
-        res = structured_llm.invoke(prompt)
-        grades.append(res.grade)
+        # 此处创建任务，不 await
+        task = structured_llm.ainvoke(prompt)
+        tasks.append(task)
+
+    results = await asyncio.gather(*tasks)
+    grades = [res.grade for res in results]
 
     reduced_docs = []
     for item in list(zip(documents, grades)):
@@ -66,7 +70,7 @@ def grade_documents(state: RAGState):
     }
 
 
-def generate(state: RAGState):
+async def generate(state: RAGState):
     question = state['question']
     documents = state['documents']
 
@@ -81,11 +85,11 @@ def generate(state: RAGState):
     这是 RAG 检索到的相关信息：{docs}
     请你根据这些信息回答用户的问题。
     """
-    result = llm.invoke(prompt)
+    result = await llm.ainvoke(prompt)
     return {"messages": [result]}
 
 
-def rewrite(state: RAGState):
+async def rewrite(state: RAGState):
     question = state['question']
     current_attempt = state.get("retry_count", 0)
     prompt = f"""
@@ -94,7 +98,7 @@ def rewrite(state: RAGState):
     请分析问题意图，输出一个优化后的、更适合搜索引擎的关键词。
     只输出关键词，不要包含解释。
     """
-    result = llm.invoke(prompt)
+    result = await llm.ainvoke(prompt)
     print(f"🔄 改写问题: {question} -> {result.content} (第 {current_attempt + 1} 次尝试)")
     return {
         "question": result.content,
@@ -127,7 +131,7 @@ graph.add_edge("generate", "__end__")
 app = graph.compile()
 
 @tool
-def call_rag_expert(task: str) -> str:
+async def call_rag_expert(task: str) -> str:
     """
     【内部知识库专家】
 
@@ -144,10 +148,11 @@ def call_rag_expert(task: str) -> str:
         "messages": [HumanMessage(content=task)],
         "question": task,
         "retry_count": 0,
+        "documents": [],
     }
     config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
-    result = app.invoke(inputs, config)
+    result = await app.ainvoke(inputs, config)
 
     final_msg = result["messages"][-1]
     return final_msg.content

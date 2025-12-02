@@ -15,7 +15,7 @@ from langgraph.graph import add_messages, StateGraph
 dotenv.load_dotenv()
 
 @tool
-def get_current_time(format: str = "%Y-%m-%d %H:%M:%S"):
+async def get_current_time(format: str = "%Y-%m-%d %H:%M:%S"):
     """
     获取当前时间。
     当用户问“今天”、“明天”、“周末”等与时间相关的问题时，必须先调用此工具获取基准时间。
@@ -23,7 +23,7 @@ def get_current_time(format: str = "%Y-%m-%d %H:%M:%S"):
     return datetime.now().strftime(format)  # 按 format 字符串格式化时间
 
 @tool
-def calculator(expression: str) -> str:
+async def calculator(expression: str) -> str:
     """
     一个计算器工具。
     适用于计算具体的数学表达式，如 '234 * 45' 或 'sqrt(100)'。
@@ -49,7 +49,7 @@ def calculator(expression: str) -> str:
         return f"Error: {e}"
 
 @tool
-def scrape_webpage(url: str) -> str:
+async def scrape_webpage(url: str) -> str:
     """
     抓取并读取指定 URL 网页的详细文本内容。
     当你通过搜索获得了链接，但需要了解链接里的具体细节时，调用此工具。
@@ -74,7 +74,7 @@ class SearchState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
 
 # tools node
-def tools_node(state: SearchState):
+async def tools_node(state: SearchState):
     last_msg = state["messages"][-1]
 
     if not last_msg.tool_calls:
@@ -90,7 +90,7 @@ def tools_node(state: SearchState):
             tool_func = tools_by_name[name]
             tool_args = tool_call["args"]
             try:
-                output = tool_func.invoke(tool_args)
+                output = await tool_func.ainvoke(tool_args)
             except Exception as e:
                 output = f"Error: {e}"
 
@@ -103,9 +103,9 @@ def tools_node(state: SearchState):
     return {"messages": tool_msgs}
 
 # agent node
-def agent_node(state: SearchState):
+async def agent_node(state: SearchState):
     messages = state["messages"]
-    result = llm_with_tools.invoke(messages)
+    result = await llm_with_tools.ainvoke(messages)
     return {"messages": [result]}
 
 graph = StateGraph(SearchState)
@@ -126,7 +126,7 @@ graph.add_conditional_edges("agent", agent_continue)
 app = graph.compile()
 
 @tool
-def call_search_expert(task: str) -> str:
+async def call_search_expert(task: str) -> str:
     """
     【互联网搜索专家】
 
@@ -143,7 +143,6 @@ def call_search_expert(task: str) -> str:
     inputs = {"messages": [HumanMessage(content=task)]}
     config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
-    result = app.invoke(inputs, config)
+    result = await app.ainvoke(inputs, config)
 
     return result["messages"][-1].content
-
