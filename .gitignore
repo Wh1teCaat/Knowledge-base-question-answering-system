@@ -207,7 +207,8 @@ marimo/_lsp/
 __marimo__/
 
 .idea/
-data/huggingface/
+data
+data/
 cache/
 chroma_db/
 agent_db.sqlite
