@@ -127,8 +127,11 @@ genson==1.3.0
 gguf==0.17.1
 gitdb==4.0.12
 GitPython==3.1.45
+google-ai-generativelanguage==0.9.0
 google-api-core==2.28.1
+google-api-python-client==2.187.0
 google-auth==2.41.1
+google-auth-httplib2==0.2.1
 google-cloud-core==2.5.0
 google-crc32c==1.7.1
 google-resumable-media==2.7.2
@@ -137,7 +140,8 @@ gradio==5.49.1
 gradio_client==1.13.3
 greenlet==3.2.4
 groovy==0.1.2
-grpcio==1.75.1
+grpcio==1.76.0
+grpcio-status==1.71.2
 gruut==2.4.0
 gruut-ipa==0.13.0
 gruut_lang_de==2.0.1
@@ -151,6 +155,7 @@ hpack==4.1.0
 htbuilder==0.9.0
 html5lib==1.1
 httpcore==1.0.9
+httplib2==0.31.0
 httptools==0.6.4
 httpx==0.28.1
 httpx-sse @ file:///C:/b/abs_35vrjlkfq0/croot/httpx-sse_1734629697200/work
@@ -188,6 +193,7 @@ jq==1.10.0
 json5 @ file:///C:/b/abs_743lprxrv5/croot/json5_1730786818336/work
 jsonlines==1.2.0
 jsonpatch==1.33
+jsonpath-ng==1.7.0
 jsonpath-python==1.0.6
 jsonpickle==4.1.1
 jsonpointer==3.0.0
@@ -215,19 +221,23 @@ langchain-chroma==1.0.0
 langchain-classic==1.0.0
 langchain-community==0.4.1
 langchain-core==1.1.0
-langchain-experimental==0.3.3
+langchain-experimental==0.4.0
+langchain-google-genai==3.2.0
 langchain-huggingface==1.1.0
 langchain-openai==1.1.0
 langchain-tavily==0.2.13
-langchain-text-splitters @ file:///C:/b/abs_45wjd3lz3c/croot/langchain-text-splitters_1746641985342/work
+langchain-text-splitters==1.0.0
 langchainhub==0.1.14
 langcodes==3.5.0
 langdetect==1.0.9
 langgraph==1.0.3
 langgraph-checkpoint==3.0.0
+langgraph-checkpoint-postgres==3.0.1
+langgraph-checkpoint-redis==0.2.1
 langgraph-checkpoint-sqlite==3.0.0
 langgraph-prebuilt==1.0.5
 langgraph-sdk==0.2.9
+langserve==0.3.3
 langsmith @ file:///C:/miniconda3/conda-bld/langsmith_1759484131515/work
 language-tags==1.2.0
 language_data==1.3.0
@@ -256,6 +266,7 @@ mistune @ file:///C:/b/abs_77yql3poyz/croot/mistune_1741124004410/work
 mkl-service==2.4.0
 mkl_fft @ file:///C:/b/abs_64riv3lfyn/croot/mkl_fft_1751310924052/work
 mkl_random @ file:///C:/b/abs_47jvsmau4j/croot/mkl_random_1751310922820/work
+ml_dtypes==0.5.4
 mmh3==5.2.0
 modelscope==1.31.0
 more-itertools==10.8.0
@@ -313,6 +324,7 @@ pathlib==1.0.1
 pathspec==0.12.1
 pillow==11.3.0
 platformdirs @ file:///C:/b/abs_ddh15014or/croot/platformdirs_1744273060660/work
+ply==3.11
 pooch==1.8.2
 portalocker==3.2.0
 posthog==5.4.0
@@ -322,8 +334,11 @@ prometheus_client @ file:///C:/b/abs_8b175q_ub8/croot/prometheus_client_17442716
 prompt-toolkit @ file:///C:/b/abs_68uwr58ed1/croot/prompt-toolkit_1704404394082/work
 propcache @ file:///C:/b/abs_57780xb0gk/croot/propcache_1744012740137/work
 proto-plus==1.26.1
-protobuf==6.33.0
+protobuf==5.29.5
 psutil @ file:///C:/miniconda3/conda-bld/psutil_1757104557256/work
+psycopg==3.3.0
+psycopg-binary==3.3.0
+psycopg-pool==3.3.0
 pulsar-client==3.8.0
 pure_eval @ file:///C:/miniconda3/conda-bld/pure_eval_1757067068391/work
 pyarrow==22.0.0
@@ -372,6 +387,7 @@ python-magic==0.4.27
 python-magic-bin==0.4.14
 python-multipart==0.0.20
 python-oxmsg==0.0.2
+python-ulid==3.1.0
 pytokens==0.3.0
 pytorch-wpe==0.0.1
 pytz==2025.2
@@ -389,6 +405,8 @@ rank-bm25==0.2.2
 RapidFuzz==3.14.1
 rapidocr-onnxruntime==1.3.25
 rdflib==7.4.0
+redis==6.4.0
+redisvl==0.12.1
 referencing @ file:///C:/b/abs_09f4hj6adf/croot/referencing_1699012097448/work
 regex @ file:///C:/b/abs_d785r851h6/croot/regex_1736542205858/work
 requests @ file:///C:/b/abs_f53smfvswb/croot/requests_1756709376206/work

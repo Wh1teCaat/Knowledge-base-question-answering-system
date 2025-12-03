@@ -224,7 +224,10 @@ class Agent:
             conninfo=db_url,
             max_size=20,
             kwargs=conn_kwargs,
+            open=False,
         )
+
+        await pool.open()
 
         checkpointer = AsyncPostgresSaver(pool)
         await checkpointer.setup()  # 第一次运行时，需要创建表结构
