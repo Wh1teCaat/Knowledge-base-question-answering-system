@@ -1,8 +1,4 @@
-import sys
 import asyncio
-
-if sys.platform.startswith('win32'):
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 import os
 os.environ["USER_AGENT"] = "my-agent-server/1.0"
@@ -15,6 +11,8 @@ from fastapi.responses import RedirectResponse
 from langserve import add_routes
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableLambda
+from typing import List, Any
+from typing_extensions import TypedDict
 
 from agent import Agent
 
@@ -61,16 +59,22 @@ async def chat_endpoint(request: ChatRequest):
     )
     return {"response": response}
 
+class AgentInput(TypedDict):
+    query: str
+
 # 接口 B: LangServe 标准接口 (供调试、LangSmith 或高级流式前端调用)
 # URL: http://localhost:8000/agent/playground
 # 注意：这里通过一个 wrapper 函数来暴露 Agent 的能力
-async def langserve_wrapper(inputs: dict):
+async def langserve_wrapper(inputs: AgentInput):
     # LangServe 传进来的 inputs 通常是 {"messages": [...]}
     # 我们提取最后一条消息作为 query
-    query = inputs["messages"][-1].content
+    query = inputs["query"]
     # 这里为了简单，暂时写死 thread_id，或者从 config 获取
     # 实际生产中 LangServe 会通过 configurable 传递 thread_id
-    return await agent_instance.ainvoke(query, thread_id="langserve_debug_user")
+    return await agent_instance.ainvoke(
+        query=query,
+        thread_id="default_thread",
+)
 
 langserve_runnable = RunnableLambda(langserve_wrapper)
 
@@ -82,5 +86,4 @@ add_routes(
 
 
 if __name__ == "__main__":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     uvicorn.run(app, host="0.0.0.0", port=8000, loop="asyncio")

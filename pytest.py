@@ -1,9 +1,5 @@
-import sys
 import asyncio
 from agent import Agent
-
-if sys.platform.startswith('win32'):
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 async def main():
     agent = await Agent.create()
