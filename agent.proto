@@ -1,1 +1,59 @@
 syntax = "proto3";
+
+option go_package = "github.com/Wh1teCaat/multi-agent/proto";
+
+// 用户认证
+service UserService {
+    rpc Register (RegisterReq) returns (RegisterResp);
+    rpc Login (LoginReq) returns (LoginResp);
+    rpc RefreshToken (RefreshTokenReq) returns (LoginResp);
+}
+
+// 代理对话
+service AgentService {
+    rpc Chat (stream ChatReq) returns (stream ChatResp);
+}
+
+message RegisterReq {
+    string username = 1;
+    string password = 2;
+    string email = 3;
+}
+
+message RegisterResp {
+    int32 code = 1;     // 0: success
+    string message = 2;
+
+    // successful response contain below
+    string user_id = 3;
+    string access_token = 4;
+    string refresh_token = 5;
+}
+
+message LoginReq {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginResp {
+    int32 code = 1;
+    string message = 2;
+    string access_token = 3;    // 短期 token
+    string refresh_token = 4;   // 长期 token
+    int64 expires_in = 5;   // 过期时间
+    string token_type = 6;  
+}
+
+message RefreshTokenReq {
+    string refresh_token = 1;
+}
+
+message ChatReq {
+    string message = 1;
+}
+
+message ChatResp {
+    string response = 1;
+    int32 code = 2;
+    string error = 3;
+}

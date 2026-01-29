@@ -1,0 +1,8 @@
+loader:
+  data_path: agent/data
+
+embedding:
+  cache_path: agent/cache/embeddings_cache.json
+
+retriever:
+  db_path: agent/chroma_db

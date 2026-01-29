@@ -1,8 +1,0 @@
-loader:
-  data_path: ./data
-
-embedding:
-  cache_path: ./cache/embeddings_cache.json
-
-retriever:
-  db_path: ./chroma_db
