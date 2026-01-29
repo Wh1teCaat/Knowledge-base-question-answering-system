@@ -1,0 +1,13 @@
+version: v2
+
+lint:
+  use:
+    - DEFAULT
+    - COMMENTS
+    - UNARY_RPC
+  except:
+    - COMMENT_MESSAGE
+    - COMMENT_FIELD
+breaking:
+  use:
+    - FILE

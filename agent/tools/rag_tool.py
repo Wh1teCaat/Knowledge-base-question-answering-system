@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from tools.base_tool import BaseToolWrapper
 
 current_script_path = Path(__file__).resolve()
-project_root = current_script_path.parent.parent
+project_root = current_script_path.parent.parent.parent
 sys.path.append(str(project_root))
 
 config_path = project_root / 'config.yaml'
