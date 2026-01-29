@@ -57,7 +57,7 @@ async def chat_endpoint(request: ChatRequest):
         query=request.query,
         thread_id=request.thread_id,
     )
-    return {"response": response}
+    return response
 
 class AgentInput(TypedDict):
     query: str
