@@ -1,6 +1,23 @@
+import sys
+from pathlib import Path
+
+import yaml
 from langchain_core.tools import StructuredTool
-from tools.base_tool import BaseToolWrapper
 from pydantic import BaseModel, Field
+
+from tools.base_tool import BaseToolWrapper
+
+current_script_path = Path(__file__).resolve()
+project_root = current_script_path.parent.parent
+sys.path.append(str(project_root))
+
+config_path = project_root / 'config.yaml'
+with open(config_path, "r", encoding="utf-8") as f:
+    config = yaml.safe_load(f)
+
+data_path = project_root / config["loader"]["data_path"]
+cache_path = project_root / config["embedding"]["cache_path"]
+db_path = project_root / config["retriever"]["db_path"]
 
 
 class RagTool(BaseToolWrapper):
@@ -25,23 +42,20 @@ class RagTool(BaseToolWrapper):
         class ArgSchema(BaseModel):
             query: str = Field(description="用户输入内容")
 
-        def _rag_func(query: str):
-            if isinstance(query, bytes):
-                query = query.decode('utf-8', errors='ignore')
-            else:
-                try:
-                    # 部分版本LangChain会把中文经过ISO-8859-1再转utf8
-                    query = query.encode('latin1').decode('utf-8')
-                except:
-                    pass
-            print(f"🧩 [RagTool] 实际接收到的 query: {repr(query)}")
-            response = retriever.invoke(query)
-            return "\n".join([doc.page_content for doc in response])
+        async def _rag_func_async(query: str):
+            return await retriever.ainvoke(query)
+
+        def _rag_func_sync(query: str):
+            return retriever.invoke(query)
 
         return StructuredTool.from_function(
-            func=_rag_func,
+            func=_rag_func_sync,        # 同步接口
+            coroutine=_rag_func_async,  # 异步接口
             name=self.name,
             description=self.description,
             arg_schema=ArgSchema,
             return_direct=False
         )
+
+
+rag_retriever = RagTool(data_path, db_path, cache_path).build()

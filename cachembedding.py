@@ -1,12 +1,12 @@
+import hashlib
+import json
 import os
+from functools import lru_cache
+
+import dotenv
 # import torch
 from langchain_core.embeddings import Embeddings
 from langchain_huggingface import HuggingFaceEmbeddings
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import hashlib
-from functools import lru_cache
-import json
-import dotenv
 
 dotenv.load_dotenv()
 

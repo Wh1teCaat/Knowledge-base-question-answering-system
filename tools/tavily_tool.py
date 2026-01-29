@@ -1,7 +1,9 @@
-from langchain_tavily import TavilySearch
-from tools.base_tool import BaseToolWrapper
-import dotenv
 import os
+
+import dotenv
+from langchain_tavily import TavilySearch
+
+from tools.base_tool import BaseToolWrapper
 
 dotenv.load_dotenv()
 
@@ -15,5 +17,4 @@ class TavilyTool(BaseToolWrapper):
         self.max_results = max_results
 
     def build(self):
-        os.environ["TAVILY_API_KEY"] = os.getenv("TAVILY_API_KEY")
         return TavilySearch(max_results=self.max_results)

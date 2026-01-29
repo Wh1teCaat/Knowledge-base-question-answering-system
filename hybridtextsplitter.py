@@ -1,9 +1,11 @@
-from langchain_community.document_transformers import EmbeddingsRedundantFilter
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
-from typing import Literal
-import dotenv
 import os
+from typing import Literal
+
+import dotenv
+from langchain_community.document_transformers import EmbeddingsRedundantFilter
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 from cachembedding import CacheEmbedding
 
 dotenv.load_dotenv()

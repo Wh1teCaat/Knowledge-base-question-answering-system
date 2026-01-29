@@ -1,12 +1,18 @@
-from langchain_core.messages import HumanMessage
-from agent import RAGAgent
+import asyncio
+from agent import Agent
 
-agent = RAGAgent()
-res = agent.invoke("生成一篇800字作文",  "user_a")
-print(res)
-res = agent.invoke("2025.11.8武汉天气", "user_b")
-print(res)
-res = agent.invoke("刚刚我问了什么问题", "user_a")
-print(res)
-res = agent.invoke("刚刚我问了什么问题", "user_b")
-print(res)
+async def main():
+    agent = await Agent.create()
+    res = await agent.ainvoke("生成一篇800字作文，选题任意",  "user_a")
+    print(res.answer)
+    res = await agent.ainvoke("2025.12.1武汉天气", "user_b")
+    print(res.answer)
+    res = await agent.ainvoke("刚刚问了什么问题", "user_a")
+    print(res.answer)
+    res = await agent.ainvoke("刚刚问了什么问题", "user_b")
+    print(res.answer)
+
+    await agent.aclose()
+
+if __name__ == '__main__':
+    asyncio.run(main())

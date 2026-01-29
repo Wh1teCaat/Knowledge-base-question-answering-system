@@ -62,6 +62,8 @@ class QuestionLog(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     user = db.relationship("User", back_populates="questions")
+
+
 def persist_question(user: User, question: str, answer: str) -> None:
     record = QuestionLog(user=user, question=question, answer=answer)
     db.session.add(record)
@@ -76,13 +78,12 @@ def get_user_by_username(username: str) -> User | None:
     return User.query.filter_by(username=username).first()
 
 
-
 with app.app_context():
     db.create_all()
 
 
 # 初始化 agent
-executor = RAGAgent().get_memory_runnable()
+executor = RAGAgent()
 
 
 @app.route("/", methods=["GET", "POST"])

@@ -1,9 +1,11 @@
 
-from tools.tavily_tool import TavilyTool
-from tools.rag_tool import RagTool
 # from migration.tools.cal_tool import CalculatorTool
 from pathlib import Path
+
 import yaml
+
+from tools.rag_tool import RagTool
+from tools.tavily_tool import TavilyTool
 
 
 class ToolFactory:
@@ -41,7 +43,3 @@ class ToolFactory:
         #     tools.append(CalculatorTool().build())
         return tools
 
-
-current_path = Path(__file__).resolve()
-print(Path(__file__).resolve())
-print(current_path.parent.parent)
