@@ -12,8 +12,7 @@ type User struct {
 
 type Checkpoint struct {
 	ID       uint   `gorm:"primaryKey" json:"id"`
-	Username string `gorm:"uniqueIndex;not null" json:"username"`
-	ThreadID string `gorm:"not null" json:"thread_id"`
+	ThreadID string `gorm:"primaryKey" json:"thread_id"`
 
-	User User `gorm:"foreignKey:Username;references:Username;"`
+	User User `gorm:"foreignKey:ID;references:ID;"`
 }
