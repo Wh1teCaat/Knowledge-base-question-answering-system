@@ -1,6 +1,10 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -11,8 +15,10 @@ type User struct {
 }
 
 type Checkpoint struct {
-	ID       uint   `gorm:"primaryKey" json:"id"`
-	ThreadID string `gorm:"primaryKey" json:"thread_id"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	ThreadID  string    `gorm:"primaryKey" json:"thread_id"`
+	Title     string    `gorm:"size:255;not null" json:"title"`
+	SampledAt time.Time `gorm:"not null" json:"sampled_at"`
 
 	User User `gorm:"foreignKey:ID;references:ID;"`
 }

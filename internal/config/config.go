@@ -8,10 +8,15 @@ import (
 
 type Config struct {
 	Database
+	Service
 }
 
 type Database struct {
 	DSN string `yaml:"dsn"`
+}
+
+type Service struct {
+	HS256_SECRET string `yaml:"hs256_secret"`
 }
 
 func LoadConfig() (*Config, error) {

@@ -8,11 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDB(dsn string) (*gorm.DB, error) {
+func InitDB(dsn string) *gorm.DB {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("🚒 failed to connect database: %v", err)
-		return nil, err
+		return nil
 	}
 
 	log.Println("Starting database migration...")
@@ -20,15 +20,15 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	err = db.AutoMigrate(&model.User{})
 	if err != nil {
 		log.Fatalf("🚒 failed to migrate User table: %v", err)
-		return nil, err
+		return nil
 	}
 
 	err = db.AutoMigrate(&model.Checkpoint{})
 	if err != nil {
 		log.Fatalf("🚒 failed to migrate Checkpoint table: %v", err)
-		return nil, err
+		return nil
 	}
 	log.Println("✅ Database migration completed.")
 
-	return db, nil
+	return db
 }
