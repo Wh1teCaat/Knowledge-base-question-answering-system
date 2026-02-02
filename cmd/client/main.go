@@ -23,20 +23,18 @@ func Register(client proto.UserServiceClient, req *proto.RegisterReq) {
 	log.Println("✅ Registration successful:", resp.Username)
 }
 
-func Login(client proto.UserServiceClient, req *proto.LoginReq) {
+func Login(client proto.UserServiceClient, req *proto.LoginReq) *proto.LoginResp {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	resp, err := client.Login(ctx, req)
 	if err != nil {
 		log.Println("🚒 Login failed:", err)
-		return
+		return nil
 	}
 
-	log.Println("✅ Login successful:")
-	log.Println("Access Token:", resp.AccessToken)
-	log.Println("Refresh Token:", resp.RefreshToken)
-	log.Println("Expires In:", resp.ExpiresIn)
+	log.Println("✅ Login successful")
+	return resp
 }
 
 func main() {
@@ -55,8 +53,37 @@ func main() {
 
 	client := proto.NewUserServiceClient(conn)
 
-	Login(client, &proto.LoginReq{
+	resp := Login(client, &proto.LoginReq{
 		Username: "testname",
 		Password: "test",
 	})
+	expiresAt := time.Unix(resp.ExpiresAt, 0)
+
+	done := make(chan struct{})
+	go func() {
+		time.Sleep(31 * time.Minute)
+		done <- struct{}{}
+	}()
+
+	go func() {
+		// 提前一分钟刷新
+		ticker := time.NewTicker(time.Until(expiresAt.Add(-1 * time.Minute)))
+		defer ticker.Stop()
+
+		for range ticker.C {
+			log.Println("🔄 Refreshing access token...")
+			newResp, err := client.RefreshToken(context.Background(), &proto.RefreshTokenReq{
+				RefreshToken: resp.RefreshToken,
+			})
+			if err != nil {
+				log.Println("🚒 Token refresh failed:", err)
+				continue
+			}
+
+			resp = newResp
+			log.Println("✅ Token refreshed successfully")
+		}
+	}()
+
+	<-done
 }

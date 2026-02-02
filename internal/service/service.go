@@ -51,9 +51,9 @@ func (s *Service) GenerateAccessToken(userID uint, username string) (string, int
 		return "", 0, err
 	}
 
-	// 按秒返回
-	expiresIn := int64(time.Until(claims.ExpiresAt.Time).Seconds())
-	return tokenString, expiresIn, nil
+	// 返回绝对过期时间戳
+	expiresAt := claims.ExpiresAt.Time.Unix()
+	return tokenString, expiresAt, nil
 }
 
 func (s *Service) GenerateRefreshToken(userID uint, username string) (string, error) {
@@ -100,18 +100,19 @@ func (s *Service) ValidateToken(tokenString string) (*Claims, error) {
 }
 
 func (s *Service) RefreshAccessToken(refreshToken string) (string, int64, error) {
+	// varify refresh token
 	claims, err := s.ValidateToken(refreshToken)
 	if err != nil {
 		return "", 0, fmt.Errorf("invalid refresh token: %w", err)
 	}
 
 	// Generate new access token
-	newAccessToken, expiresIn, err := s.GenerateAccessToken(claims.UserID, claims.Username)
+	newAccessToken, expiresAt, err := s.GenerateAccessToken(claims.UserID, claims.Username)
 	if err != nil {
 		return "", 0, fmt.Errorf("failed to generate access token: %w", err)
 	}
 
-	return newAccessToken, expiresIn, nil
+	return newAccessToken, expiresAt, nil
 }
 
 func (s *Service) Register(username, password, email string) error {
@@ -157,7 +158,7 @@ func (s *Service) Login(username, password string) (string, string, int64, error
 		return "", "", 0, ErrInvalidCredentials
 	}
 
-	access_token, expiresIn, err := s.GenerateAccessToken(user.ID, user.Username)
+	access_token, expiresAt, err := s.GenerateAccessToken(user.ID, user.Username)
 	if err != nil {
 		return "", "", 0, fmt.Errorf("failed to generate access token: %w", err)
 	}
@@ -171,5 +172,5 @@ func (s *Service) Login(username, password string) (string, string, int64, error
 		return "", "", 0, fmt.Errorf("failed to update refresh token: %w", err)
 	}
 
-	return access_token, refresh_token, expiresIn, nil
+	return access_token, refresh_token, expiresAt, nil
 }

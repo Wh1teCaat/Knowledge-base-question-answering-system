@@ -42,7 +42,7 @@ func (s *Server) Register(ctx context.Context, req *proto.RegisterReq) (*proto.R
 }
 
 func (s *Server) Login(ctx context.Context, req *proto.LoginReq) (*proto.LoginResp, error) {
-	accessToken, refreshToken, expiresIn, err := s.svc.Login(req.Username, req.Password)
+	accessToken, refreshToken, expiresAt, err := s.svc.Login(req.Username, req.Password)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrEmptyFields):
@@ -58,12 +58,12 @@ func (s *Server) Login(ctx context.Context, req *proto.LoginReq) (*proto.LoginRe
 	return &proto.LoginResp{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		ExpiresIn:    expiresIn,
+		ExpiresAt:    expiresAt,
 	}, nil
 }
 
 func (s *Server) RefreshToken(ctx context.Context, req *proto.RefreshTokenReq) (*proto.LoginResp, error) {
-	accessToken, expiresIn, err := s.svc.RefreshAccessToken(req.RefreshToken)
+	accessToken, expiresAt, err := s.svc.RefreshAccessToken(req.RefreshToken)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCredentials):
@@ -77,6 +77,6 @@ func (s *Server) RefreshToken(ctx context.Context, req *proto.RefreshTokenReq) (
 	return &proto.LoginResp{
 		AccessToken:  accessToken,
 		RefreshToken: req.RefreshToken,
-		ExpiresIn:    expiresIn,
+		ExpiresAt:    expiresAt,
 	}, nil
 }

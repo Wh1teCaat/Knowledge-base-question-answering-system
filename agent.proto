@@ -32,7 +32,7 @@ message LoginReq {
 message LoginResp {
     string access_token = 1;    // 短期 token
     string refresh_token = 2;   // 长期 token
-    int64 expires_in = 3;   // 过期时间
+    int64 expires_at = 3;   // 过期时间
 }
 
 message RefreshTokenReq {
