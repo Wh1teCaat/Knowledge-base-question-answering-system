@@ -17,6 +17,10 @@ type Server struct {
 	svc *service.Service
 }
 
+func NewServer(svc *service.Service) *Server {
+	return &Server{svc: svc}
+}
+
 func (s *Server) Register(ctx context.Context, req *proto.RegisterReq) (*proto.RegisterResp, error) {
 	if err := s.svc.Register(req.Username, req.Password, req.Email); err != nil {
 		switch {
