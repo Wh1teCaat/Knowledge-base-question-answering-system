@@ -35,6 +35,7 @@ func main() {
 	// register service to server
 	s := grpc.NewServer(grpc.Creds(creds))
 	proto.RegisterUserServiceServer(s, srv)
+	proto.RegisterAgentServiceServer(s, srv)
 
 	log.Println("✅ gRPC server is running on port 50051")
 

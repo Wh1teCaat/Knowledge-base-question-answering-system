@@ -4,9 +4,9 @@ from typing import TypedDict, Annotated, Optional
 import dotenv
 import tiktoken
 from langchain_core.messages import BaseMessage, HumanMessage, RemoveMessage, SystemMessage, ToolMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg_pool import AsyncConnectionPool
+from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
@@ -56,7 +56,7 @@ class Agent:
         max_tokens = max_tokens
         tools = [call_rag_expert, call_search_expert]
         tools_by_name = {tool.name: tool for tool in tools}
-        llm = ChatGoogleGenerativeAI(model=os.getenv("GEMINI_MODEL"))
+        llm = ChatOpenAI(model=os.getenv("MODEL_NAME"))
         llm_with_tools = llm.bind_tools(tools)
         llm_structured = llm.with_structured_output(Receipt)
 

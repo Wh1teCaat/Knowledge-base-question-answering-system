@@ -1,8 +1,13 @@
 package service
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
 	"github.com/Wh1teCaat/multi-agent/internal/model"
@@ -16,6 +21,9 @@ var (
 	ErrEmptyFields        = errors.New("username, password, and email cannot be empty")
 	ErrHashPassword       = errors.New("failed to hash password")
 	ErrInvalidCredentials = errors.New("invalid username or password")
+	ErrArgumentNull       = errors.New("argument cannot be null")
+	ErrCreateRequest      = errors.New("failed to create req")
+	ErrAgentService       = errors.New("agent service error")
 )
 
 type Service struct {
@@ -96,7 +104,6 @@ func (s *Service) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	return nil, fmt.Errorf("invalid token")
-
 }
 
 func (s *Service) RefreshAccessToken(refreshToken string) (string, int64, error) {
@@ -173,4 +180,66 @@ func (s *Service) Login(username, password string) (string, string, int64, error
 	}
 
 	return access_token, refresh_token, expiresAt, nil
+}
+
+// chat module
+type ChatRequest struct {
+	ID       uint   `json:"id"`
+	ThreadID string `json:"thread_id"`
+	Query    string `json:"query"`
+}
+
+type ChatResponse struct {
+	Reason string   `json:"reason"`
+	Answer string   `json:"answer"`
+	Source []string `json:"source"`
+}
+
+func (s *Service) ChatWithAgent(ctx context.Context, req *ChatRequest) (string, error) {
+	if req.Query == "" {
+		return "", ErrArgumentNull
+	}
+
+	if err := s.repo.UpsertCheckpoint(&model.Checkpoint{
+		ID:        req.ID,
+		ThreadID:  req.ThreadID,
+		Title:     req.Query,
+		SampledAt: time.Now(),
+	}); err != nil {
+		return "", fmt.Errorf("failed to upsert checkpoint: %w", err)
+	}
+
+	body, err := json.Marshal(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	httpCtx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer cancel()
+
+	http_req, err := http.NewRequestWithContext(httpCtx, "POST", "http://localhost:8000/chat", bytes.NewReader(body))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+	http_req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+
+	resp, err := client.Do(http_req)
+	if err != nil {
+		return "", fmt.Errorf("agent service error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("agent service returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var chatresp ChatResponse
+	if err := json.NewDecoder(resp.Body).Decode(&chatresp); err != nil {
+		return "", fmt.Errorf("failed to decode response: %w, body: %s", err, string(chatresp.Answer))
+	}
+
+	return chatresp.Answer, nil
 }

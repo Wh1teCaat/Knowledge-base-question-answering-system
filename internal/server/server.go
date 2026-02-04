@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 
 	"github.com/Wh1teCaat/multi-agent/internal/service"
@@ -14,6 +16,7 @@ import (
 
 type Server struct {
 	proto.UnimplementedUserServiceServer
+	proto.UnimplementedAgentServiceServer
 	svc *service.Service
 }
 
@@ -79,4 +82,40 @@ func (s *Server) RefreshToken(ctx context.Context, req *proto.RefreshTokenReq) (
 		RefreshToken: req.RefreshToken,
 		ExpiresAt:    expiresAt,
 	}, nil
+}
+
+func (s *Server) Chat(stream proto.AgentService_ChatServer) error {
+	for {
+		// Recv
+		req, err := stream.Recv()
+		if err == io.EOF {
+			log.Println("Client close")
+			return nil
+		}
+		if err != nil {
+			log.Printf("🚒 failed to receive chat request: %v", err)
+			return err
+		}
+
+		// call service
+		answer, err := s.svc.ChatWithAgent(stream.Context(), &service.ChatRequest{
+			ID:       uint(req.Id),
+			ThreadID: req.ThreadId,
+			Query:    req.Query,
+		})
+		if err != nil {
+			log.Printf("[Error] %v", err)
+			if sendErr := stream.Send(&proto.ChatResp{Response: fmt.Sprintf("Error: %v", err)}); sendErr != nil {
+				log.Printf("[Error] %v", sendErr)
+				return sendErr
+			}
+			continue
+		}
+
+		// Send
+		if err := stream.Send(&proto.ChatResp{Response: answer}); err != nil {
+			log.Printf("[Error] %v", err)
+			return err
+		}
+	}
 }

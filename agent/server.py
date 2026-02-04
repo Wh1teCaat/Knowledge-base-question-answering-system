@@ -14,7 +14,7 @@ from langchain_core.runnables import RunnableLambda
 from typing import List, Any
 from typing_extensions import TypedDict
 
-from agent import Agent
+from agent import Agent, Receipt
 
 class ChatRequest(BaseModel):
     query: str = Field(description="用户提问的内容")
@@ -57,7 +57,14 @@ async def chat_endpoint(request: ChatRequest):
         query=request.query,
         thread_id=request.thread_id,
     )
-    return response
+
+    if type(response) == Receipt:
+        return {
+            "reason": response.reason,
+            "answer": response.answer,
+            "source": response.source,
+        }
+    return {"answer": response}
 
 class AgentInput(TypedDict):
     query: str
