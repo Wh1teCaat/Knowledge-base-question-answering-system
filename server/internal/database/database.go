@@ -3,7 +3,7 @@ package database
 import (
 	"log"
 
-	"github.com/Wh1teCaat/multi-agent/internal/model"
+	"github.com/Wh1teCaat/multi-agent/server/internal/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

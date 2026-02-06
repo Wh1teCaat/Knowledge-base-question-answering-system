@@ -7,15 +7,15 @@ import (
 )
 
 type Config struct {
-	Database
-	Service
+	Database `yaml:"database"`
+	Jwt      `yaml:"jwt"`
 }
 
 type Database struct {
 	DSN string `yaml:"dsn"`
 }
 
-type Service struct {
+type Jwt struct {
 	HS256_SECRET string `yaml:"hs256_secret"`
 }
 

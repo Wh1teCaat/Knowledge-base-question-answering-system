@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/Wh1teCaat/multi-agent/internal/model"
+	"github.com/Wh1teCaat/multi-agent/server/internal/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -29,6 +29,10 @@ func (r *Repository) GetUserByUsername(username string) (*model.User, error) {
 
 func (r *Repository) UpdateRefreshToken(userID uint, refreshToken string) error {
 	return r.DB.Model(&model.User{}).Where("id = ?", userID).Update("refresh_token", refreshToken).Error
+}
+
+func (r *Repository) VerifyRefreshToken(userID uint, refreshToken string) error {
+	return r.DB.First(&model.User{}, "id = ? AND refresh_token = ?", userID, refreshToken).Error
 }
 
 func (r *Repository) UpsertCheckpoint(checkpoint *model.Checkpoint) error {

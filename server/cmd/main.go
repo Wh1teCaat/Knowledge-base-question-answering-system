@@ -4,12 +4,13 @@ import (
 	"log"
 	"net"
 
-	"github.com/Wh1teCaat/multi-agent/internal/config"
-	"github.com/Wh1teCaat/multi-agent/internal/database"
-	"github.com/Wh1teCaat/multi-agent/internal/repository"
-	"github.com/Wh1teCaat/multi-agent/internal/server"
-	"github.com/Wh1teCaat/multi-agent/internal/service"
 	"github.com/Wh1teCaat/multi-agent/proto"
+	"github.com/Wh1teCaat/multi-agent/server/internal/config"
+	"github.com/Wh1teCaat/multi-agent/server/internal/database"
+	"github.com/Wh1teCaat/multi-agent/server/internal/interceptor"
+	"github.com/Wh1teCaat/multi-agent/server/internal/repository"
+	"github.com/Wh1teCaat/multi-agent/server/internal/server"
+	"github.com/Wh1teCaat/multi-agent/server/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -23,7 +24,7 @@ func main() {
 
 	db := database.InitDB(cfg.Database.DSN)
 	repo := repository.NewRepository(db)
-	svc := service.NewService(repo, cfg.Service.HS256_SECRET)
+	svc := service.NewService(repo)
 	srv := server.NewServer(svc)
 
 	// load credentials
@@ -33,7 +34,10 @@ func main() {
 	}
 
 	// register service to server
-	s := grpc.NewServer(grpc.Creds(creds))
+	s := grpc.NewServer(
+		grpc.Creds(creds),
+		grpc.UnaryInterceptor(interceptor.CalculateTime),
+	)
 	proto.RegisterUserServiceServer(s, srv)
 	proto.RegisterAgentServiceServer(s, srv)
 

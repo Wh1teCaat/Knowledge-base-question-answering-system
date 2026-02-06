@@ -7,8 +7,8 @@ import (
 	"io"
 	"log"
 
-	"github.com/Wh1teCaat/multi-agent/internal/service"
 	"github.com/Wh1teCaat/multi-agent/proto"
+	"github.com/Wh1teCaat/multi-agent/server/internal/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
