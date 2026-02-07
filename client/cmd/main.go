@@ -10,10 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Wh1teCaat/multi-agent/client/internal/interceptor"
+	"github.com/Wh1teCaat/multi-agent/client/internal/tokenmanager"
 	"github.com/Wh1teCaat/multi-agent/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
 )
 
 func Register(client proto.UserServiceClient, req *proto.RegisterReq) {
@@ -92,7 +93,14 @@ func main() {
 		log.Fatalf("[Error] Credential loading failed: %v", err)
 	}
 
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(creds))
+	tm := &tokenmanager.TokenManager{}
+
+	conn, err := grpc.NewClient(
+		"localhost:50051",
+		grpc.WithTransportCredentials(creds),
+		grpc.WithUnaryInterceptor(interceptor.TokenInjectUnaryInterceptor(tm)),
+		grpc.WithStreamInterceptor(interceptor.TokenInjectStreamInterceptor(tm)),
+	)
 	if err != nil {
 		log.Fatalf("[Error] Connection failed: %v", err)
 	}
@@ -143,36 +151,8 @@ func main() {
 		}
 	}
 
-	expiresAt := time.Unix(login_resp.ExpiresAt, 0)
-	access_token := login_resp.AccessToken
-	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("access_token", access_token))
+	tm.UpdateTokens(login_resp.AccessToken, login_resp.RefreshToken, login_resp.ExpiresAt)
+	tm.StartTokenRefresher(user_client)
 
-	done := make(chan struct{})
-	go func() {
-		time.Sleep(15 * time.Minute)
-		close(done)
-	}()
-
-	go func() {
-		// 提前一分钟刷新
-		ticker := time.NewTicker(time.Until(expiresAt.Add(-1 * time.Minute)))
-		defer ticker.Stop()
-
-		for range ticker.C {
-			log.Println("🔄 Refreshing access token...")
-
-			newResp, err := user_client.RefreshToken(ctx, &proto.RefreshTokenReq{RefreshToken: login_resp.RefreshToken})
-			if err != nil {
-				log.Println("🚒 Token refresh failed:", err)
-				continue
-			}
-
-			login_resp = newResp
-			log.Println("✅ Token refreshed successfully")
-		}
-	}()
-
-	Chat(ctx, agent_client)
-
-	<-done
+	Chat(context.Background(), agent_client)
 }
