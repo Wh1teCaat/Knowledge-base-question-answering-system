@@ -67,7 +67,7 @@ func Chat(ctx context.Context, client proto.AgentServiceClient) {
 			return
 		}
 
-		if err := stream.Send(&proto.ChatReq{Id: 1, ThreadId: "default", Query: line}); err != nil {
+		if err := stream.Send(&proto.ChatReq{ThreadId: "default", Query: line}); err != nil {
 			log.Println("[Error] Sending chat request failed:", err)
 			return
 		}
@@ -132,6 +132,7 @@ func main() {
 				fmt.Println("Login failed, please try again.")
 				continue
 			}
+
 			break
 		} else if choice == "r" {
 			var username, password, email string

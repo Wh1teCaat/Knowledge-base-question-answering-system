@@ -40,9 +40,8 @@ message RefreshTokenReq {
 }
 
 message ChatReq {
-    uint32 id = 1;
-    string thread_id = 2;
-    string query = 3;
+    string thread_id = 1;
+    string query = 2;
 }
 
 message ChatResp {

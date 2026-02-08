@@ -12,3 +12,5 @@ database:
 
 jwt:
   hs256_secret: "butterfly"
+
+python_addr: "[::]:50052"

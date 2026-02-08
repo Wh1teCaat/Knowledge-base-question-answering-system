@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -86,6 +87,10 @@ func AuthenticateStream(srv interface{}, ss grpc.ServerStream, info *grpc.Stream
 
 	ctx := context.WithValue(ss.Context(), "userID", claims.UserID)
 	ctx = context.WithValue(ctx, "username", claims.Username)
+	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs(
+		"user_id", fmt.Sprintf("%d", claims.UserID),
+		"username", claims.Username,
+	))
 
 	wrapped := &wrappedServerStream{
 		ServerStream: ss,

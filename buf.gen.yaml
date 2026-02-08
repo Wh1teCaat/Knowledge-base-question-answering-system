@@ -1,6 +1,7 @@
 version: v2
 
 plugins:
+  # Go code generator
   - local: protoc-gen-go
     out: proto/
     opt: paths=source_relative
@@ -8,3 +9,13 @@ plugins:
   - local: protoc-gen-go-grpc
     out: proto/
     opt: paths=source_relative
+
+  # Python code generator
+  - remote: buf.build/protocolbuffers/python:v28.3
+    out: agent/proto/
+
+  - remote: buf.build/grpc/python:v1.67.0
+    out: agent/proto/
+
+  - remote: buf.build/community/nipunn1313-mypy:v4.0.0
+    out: agent/proto/

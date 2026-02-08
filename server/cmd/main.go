@@ -20,12 +20,15 @@ func main() {
 	if err != nil {
 		log.Println("🚒 failed to load config:", err)
 	}
-	log.Println("Config loaded successfully:", cfg)
+	log.Println("Config loaded successfully")
 
 	db := database.InitDB(cfg.Database.DSN)
 	repo := repository.NewRepository(db)
 	svc := service.NewService(repo)
-	srv := server.NewServer(svc)
+	srv, err := server.NewServer(svc, cfg.PythonAddr)
+	if err != nil {
+		log.Fatalf("failed to create server: %v", err)
+	}
 
 	// load credentials
 	creds, err := credentials.NewServerTLSFromFile("server.pem", "server.key")
@@ -36,7 +39,8 @@ func main() {
 	// register service to server
 	s := grpc.NewServer(
 		grpc.Creds(creds),
-		grpc.UnaryInterceptor(interceptor.CalculateTime),
+		grpc.ChainUnaryInterceptor(interceptor.Authenticate, interceptor.CalculateTime),
+		grpc.StreamInterceptor(interceptor.AuthenticateStream),
 	)
 	proto.RegisterUserServiceServer(s, srv)
 	proto.RegisterAgentServiceServer(s, srv)

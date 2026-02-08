@@ -7,16 +7,17 @@ import (
 )
 
 type Config struct {
-	Database `yaml:"database"`
-	Jwt      `yaml:"jwt"`
+	Database   `mapstructure:"database"`
+	Jwt        `mapstructure:"jwt"`
+	PythonAddr string `mapstructure:"python_addr"`
 }
 
 type Database struct {
-	DSN string `yaml:"dsn"`
+	DSN string `mapstructure:"dsn"`
 }
 
 type Jwt struct {
-	HS256_SECRET string `yaml:"hs256_secret"`
+	HS256_SECRET string `mapstructure:"hs256_secret"`
 }
 
 func LoadConfig() (*Config, error) {
