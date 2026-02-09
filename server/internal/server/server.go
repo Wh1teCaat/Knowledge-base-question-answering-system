@@ -109,40 +109,6 @@ func (s *Server) RefreshToken(ctx context.Context, req *proto.RefreshTokenReq) (
 }
 
 func (s *Server) Chat(stream proto.AgentService_ChatServer) error {
-	// for {
-	// 	// Recv
-	// 	req, err := stream.Recv()
-	// 	if err == io.EOF {
-	// 		log.Println("Client close")
-	// 		return nil
-	// 	}
-	// 	if err != nil {
-	// 		log.Printf("🚒 failed to receive chat request: %v", err)
-	// 		return err
-	// 	}
-
-	// 	// call service
-	// 	answer, err := s.svc.ChatWithAgent(stream.Context(), &service.ChatRequest{
-	// 		ID:       stream.Context().Value("userID").(uint),
-	// 		ThreadID: req.ThreadId,
-	// 		Query:    req.Query,
-	// 	})
-	// 	if err != nil {
-	// 		log.Printf("[Error] %v", err)
-	// 		if sendErr := stream.Send(&proto.ChatResp{Response: fmt.Sprintf("Error: %v", err)}); sendErr != nil {
-	// 			log.Printf("[Error] %v", sendErr)
-	// 			return sendErr
-	// 		}
-	// 		continue
-	// 	}
-
-	// 	// Send
-	// 	if err := stream.Send(&proto.ChatResp{Response: answer}); err != nil {
-	// 		log.Printf("[Error] %v", err)
-	// 		return err
-	// 	}
-	// }
-
 	pythonStream, err := s.agentClient.Chat(stream.Context())
 	if err != nil {
 		log.Printf("🚒 failed to create python chat stream: %v", err)
